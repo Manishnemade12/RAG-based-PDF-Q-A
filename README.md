@@ -46,7 +46,7 @@ AI Study Assistant is a JavaScript-based RAG demo for PDF question answering. It
 - `XAI_API_KEY` - your Grok/XAI API key
 - `GROK_API_KEY` - legacy fallback name supported by the app
 - `GROK_API_BASE_URL` - Grok-compatible API base URL
-- `GROK_CHAT_MODEL` - chat model name
+- `GROK_CHAT_MODEL` - chat model name, defaults to `grok-4.3`
 - `PORT` - backend port
 - `CLIENT_ORIGIN` - allowed browser origin
 - `MAX_CHUNK_WORDS` - chunk size for ingestion

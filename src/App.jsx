@@ -122,7 +122,15 @@ export default function App() {
       setCitations(data.citations || []);
       setSources(data.sources || []);
       setConfidence(data.confidence || 0);
-      setStatusMessage('Answer ready.');
+      setStatusMessage(
+        data.answerSource === 'xai'
+          ? 'Answer ready from xAI.'
+          : data.grokError === 'missing_api_key'
+            ? 'Using local fallback because XAI_API_KEY is missing.'
+            : data.grokError === 'xai_403'
+              ? 'Using local fallback because xAI returned 403 permission-denied.'
+              : 'Using local fallback answer.'
+      );
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Question failed.');
     } finally {

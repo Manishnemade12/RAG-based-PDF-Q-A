@@ -3,10 +3,10 @@ const defaultBaseUrl = 'https://api.x.ai/v1';
 export async function generateGrokAnswer({ question, context }) {
   const apiKey = process.env.XAI_API_KEY || process.env.GROK_API_KEY;
   const baseUrl = process.env.GROK_API_BASE_URL || defaultBaseUrl;
-  const model = process.env.GROK_CHAT_MODEL || 'grok-2-latest';
+  const model = process.env.GROK_CHAT_MODEL || 'grok-4.3';
 
   if (!apiKey) {
-    return localFallbackAnswer(question, context);
+    return localFallbackAnswer(question, context, 'missing_api_key');
   }
 
   try {
@@ -37,19 +37,22 @@ export async function generateGrokAnswer({ question, context }) {
     });
 
     if (!response.ok) {
-      return localFallbackAnswer(question, context);
+      const errorText = await response.text();
+      return localFallbackAnswer(question, context, `xai_${response.status}`, errorText);
     }
 
     const data = await response.json();
     const message = data?.choices?.[0]?.message?.content?.trim();
 
-    return message || localFallbackAnswer(question, context);
+    return message
+      ? { answer: message, source: 'xai', error: null }
+      : localFallbackAnswer(question, context, 'empty_response');
   } catch (_error) {
-    return localFallbackAnswer(question, context);
+    return localFallbackAnswer(question, context, 'network_error');
   }
 }
 
-function localFallbackAnswer(question, context) {
+function localFallbackAnswer(question, context, reason, details = '') {
   const sentences = context
     .replace(/\s+/g, ' ')
     .split(/(?<=[.!?])\s+/)
@@ -57,8 +60,26 @@ function localFallbackAnswer(question, context) {
     .slice(0, 3);
 
   if (!sentences.length) {
-    return 'Information not found in the uploaded document.';
+    return {
+      answer: 'Information not found in the uploaded document.',
+      source: 'fallback',
+      error: reason
+    };
   }
 
-  return `Grok API key is not configured, so this is a local context-based response. Question: ${question}. Relevant context: ${sentences.join(' ')}`;
+  const prefixByReason = {
+    missing_api_key: 'xAI key is missing, so this is a local context-based response.',
+    empty_response: 'xAI returned an empty response, so this is a local context-based response.',
+    network_error: 'xAI could not be reached, so this is a local context-based response.'
+  };
+
+  const apiMessage = reason && reason.startsWith('xai_')
+    ? `xAI returned ${reason.replace('xai_', '')}${details ? `: ${details}` : ''}.`
+    : prefixByReason[reason] || 'This is a local context-based response.';
+
+  return {
+    answer: `${apiMessage} Question: ${question}. Relevant context: ${sentences.join(' ')}`,
+    source: 'fallback',
+    error: reason
+  };
 }

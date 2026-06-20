@@ -153,10 +153,13 @@ export async function answerQuestion({ question, documentId }) {
     .map((match, index) => `[Source ${index + 1} | ${match.filename} | pages ${match.pageRange}] ${match.text}`)
     .join('\n\n');
 
-  const answer = await generateGrokAnswer({ question: queryText, context });
+  const grokResult = await generateGrokAnswer({ question: queryText, context });
+  const answer = grokResult.answer;
 
   return {
     answer,
+    answerSource: grokResult.source,
+    grokError: grokResult.error || null,
     confidence: Number(matches[0].similarity.toFixed(3)),
     citations: matches.map((match, index) => ({
       label: `Source ${index + 1}`,
