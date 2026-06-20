@@ -1,4 +1,3 @@
-import fs from 'fs/promises';
 import path from 'path';
 import pdf from 'pdf-parse';
 import {
@@ -22,14 +21,65 @@ export function getDocuments() {
 }
 
 export async function ingestPdfDocument({ buffer, filename }) {
-  const parsed = await pdf(buffer);
+  const documentId = `${Date.now()}-${sanitizeName(filename)}`;
+  const baseDocument = {
+    documentId,
+    filename,
+    uploadedAt: new Date().toISOString(),
+    pageCount: 0,
+    chunks: [],
+    status: 'processing',
+    error: null
+  };
+
+  let parsed;
+
+  try {
+    parsed = await pdf(buffer);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown PDF parse error';
+    const document = {
+      ...baseDocument,
+      status: 'needs_text',
+      error: `Failed to parse PDF: ${message}`
+    };
+
+    documents.unshift(document);
+
+    return {
+      documentId: document.documentId,
+      filename: document.filename,
+      pageCount: document.pageCount,
+      chunkCount: 0,
+      uploadedAt: document.uploadedAt,
+      status: document.status,
+      error: document.error
+    };
+  }
+
   const pages = String(parsed.text || '')
     .split(/\f/g)
     .map((pageText) => normalizeText(pageText))
     .filter((pageText) => pageText.length > 0);
 
   if (!pages.length) {
-    throw new Error('No extractable text was found in the PDF.');
+    const document = {
+      ...baseDocument,
+      status: 'needs_text',
+      error: 'No extractable text was found in the PDF.'
+    };
+
+    documents.unshift(document);
+
+    return {
+      documentId: document.documentId,
+      filename: document.filename,
+      pageCount: document.pageCount,
+      chunkCount: 0,
+      uploadedAt: document.uploadedAt,
+      status: document.status,
+      error: document.error
+    };
   }
 
   const chunks = buildChunks(pages, {
@@ -42,11 +92,11 @@ export async function ingestPdfDocument({ buffer, filename }) {
   }));
 
   const document = {
-    documentId: `${Date.now()}-${sanitizeName(filename)}`,
-    filename,
-    uploadedAt: new Date().toISOString(),
+    ...baseDocument,
     pageCount: pages.length,
-    chunks
+    chunks,
+    status: 'ready',
+    error: null
   };
 
   documents.unshift(document);
@@ -57,6 +107,8 @@ export async function ingestPdfDocument({ buffer, filename }) {
     pageCount: document.pageCount,
     chunkCount: document.chunks.length,
     uploadedAt: document.uploadedAt
+    ,status: document.status,
+    error: document.error
   };
 }
 

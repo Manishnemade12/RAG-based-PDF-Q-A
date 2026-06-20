@@ -79,7 +79,11 @@ export default function App() {
       setUploadFile(null);
       await loadDocuments();
       setSelectedDocumentId(data.document.documentId);
-      setStatusMessage(`Uploaded ${data.document.filename} and indexed ${data.document.chunkCount} chunks.`);
+      setStatusMessage(
+        data.warning
+          ? `Uploaded ${data.document.filename}, but text extraction was limited: ${data.warning}`
+          : `Uploaded ${data.document.filename} and indexed ${data.document.chunkCount} chunks.`
+      );
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Upload failed.');
     } finally {
@@ -194,6 +198,7 @@ export default function App() {
                   <strong>{document.filename}</strong>
                   <span>
                     {document.pageCount} pages · {document.chunkCount} chunks
+                    {document.status && document.status !== 'ready' ? ` · ${document.status}` : ''}
                   </span>
                 </button>
               ))

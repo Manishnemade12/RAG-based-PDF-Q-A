@@ -50,9 +50,13 @@ app.post('/api/documents', upload.single('file'), async (request, response) => {
       filename: request.file.originalname
     });
 
-    return response.status(201).json({ document: result });
+    return response.status(201).json({
+      document: result,
+      warning: result.error || undefined
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to process document.';
+    console.error('Document ingestion failed:', error);
     return response.status(500).json({ error: message });
   }
 });

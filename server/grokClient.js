@@ -1,7 +1,7 @@
 const defaultBaseUrl = 'https://api.x.ai/v1';
 
 export async function generateGrokAnswer({ question, context }) {
-  const apiKey = process.env.GROK_API_KEY;
+  const apiKey = process.env.XAI_API_KEY || process.env.GROK_API_KEY;
   const baseUrl = process.env.GROK_API_BASE_URL || defaultBaseUrl;
   const model = process.env.GROK_CHAT_MODEL || 'grok-2-latest';
 

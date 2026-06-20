@@ -7,7 +7,7 @@ AI Study Assistant is a JavaScript-based RAG demo for PDF question answering. It
 - Express API for PDF upload, document listing, and question answering
 - In-memory document store for uploaded PDFs
 - PDF text extraction, cleaning, chunking, and cosine-similarity retrieval
-- Grok chat completion integration with a local fallback when `GROK_API_KEY` is missing
+- Grok chat completion integration with a local fallback when `XAI_API_KEY` is missing
 - React + Vite frontend for uploading PDFs and asking questions
 
 ## Setup
@@ -21,7 +21,7 @@ AI Study Assistant is a JavaScript-based RAG demo for PDF question answering. It
 2. Add your Grok key to `.env`:
 
    ```env
-   GROK_API_KEY=your_key_here
+   XAI_API_KEY=your_key_here
    ```
 
 3. Start the app in development mode:
@@ -43,7 +43,8 @@ AI Study Assistant is a JavaScript-based RAG demo for PDF question answering. It
 
 ## Environment variables
 
-- `GROK_API_KEY` - your Grok API key
+- `XAI_API_KEY` - your Grok/XAI API key
+- `GROK_API_KEY` - legacy fallback name supported by the app
 - `GROK_API_BASE_URL` - Grok-compatible API base URL
 - `GROK_CHAT_MODEL` - chat model name
 - `PORT` - backend port
@@ -54,4 +55,4 @@ AI Study Assistant is a JavaScript-based RAG demo for PDF question answering. It
 ## Notes
 
 - The backend currently keeps uploaded documents in memory. Restarting the server clears the index.
-- If `GROK_API_KEY` is not set, the server returns a local context-based fallback answer so the app still works for demos.
+- If `XAI_API_KEY` is not set, the server returns a local context-based fallback answer so the app still works for demos.
